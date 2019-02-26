@@ -23,7 +23,7 @@ function infomessage() {
 
 function getExternalIP() {
   local namespace="$1"
-  until kubectl get ing  basic-ingress -n $namespace -o json | jq '.status.loadBalancer.ingress[].ip'
+  until kubectl get ing basic-ingress -n $namespace -o json | jq '.status.loadBalancer.ingress[].ip'
   do
     sleep 40
     echo "Waiting for external ip for ingress to be assigned!"
@@ -40,7 +40,7 @@ function deployAppAndCreateIngress() {
   infomessage "Deploy application and create ingress in $cluster_name's $namspace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
   kubectl get pods -n $namespace
-  kubectl run --image=gcr.io/sinatra/test --port=4567 --limits=cpu=50m,memory=50Mi sinatra -n $namespace
+  kubectl run --image=gcr.io/sinatra/test --port=4567 sinatra -n $namespace
   kubectl expose deployment sinatra --target-port=4567 --type=NodePort -n $namespace
 
   cat <<-EOF >>ingress.yaml
@@ -184,7 +184,7 @@ EOF
 #-------------------------------------------------------------------------------
 infomessage "initialize prject and set compute zone"
 gcloud auth activate-service-account --key-file="$SERVICE_ACCOUNT_KEY_PATH"
-gcloud config set project sinatra
+gcloud config set project $PROJECT_NAME
 gcloud config set compute/zone us-central1-b
 
 #-------------------------------------------------------------------------------
