@@ -51,6 +51,6 @@ And also have service account json ready for you GCP Project!
     ./gcpTest.sh /Users/shashank.koppar/Downloads/sinatra-test.json "sample-cluster-name" "project_name"
 
 ## Notes
-
-    Also external ip takes some time to come into effect. So hang on tight till it get ready!
+    Compute zone is hardcoded as us-central1-b!
+    Also external ip takes some time to come into effect. So hang on tight till it gets ready!
     Not using static ip for ingress since I just have an free version
