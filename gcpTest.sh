@@ -40,8 +40,49 @@ function deployAppAndCreateIngress() {
   infomessage "Deploy application and create ingress in $cluster_name's $namspace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
   kubectl get pods -n $namespace
-  kubectl run --image=gcr.io/sinatra/test --port=4567 sinatra -n $namespace
-  kubectl expose deployment sinatra --target-port=4567 --type=NodePort -n $namespace
+
+cat <<-EOF >>deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sinatra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: sinatra
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 30%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: sinatra
+    spec:
+      containers:
+      - name: sinatra
+        image: gcr.io/sinatra/test
+        ports:
+        - containerPort: 4567
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4567
+          initialDelaySeconds: 20
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4567
+          initialDelaySeconds: 20
+          timeoutSeconds: 3
+EOF
+
+  kubectl create -f deployment.yaml -n $namespace
+  rm deployment.yaml
+  kubectl expose deployment sinatra --target-port=4567 --port=80 --type=NodePort -n $namespace
 
   cat <<-EOF >>ingress.yaml
   apiVersion: extensions/v1beta1
@@ -51,7 +92,7 @@ function deployAppAndCreateIngress() {
   spec:
     backend:
       serviceName: sinatra
-      servicePort: 4567
+      servicePort: 80
 EOF
 
   kubectl create -f ingress.yaml -n $namespace
