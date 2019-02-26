@@ -37,7 +37,7 @@ function deployAppAndCreateIngress() {
   local project_name="$3"
   local namespace="$4"
 
-  infomessage "Deploy application and create ingress in $cluster_name's $namspace!"
+  infomessage "Deploy application and create ingress in $cluster_name's $namespace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
   kubectl get pods -n $namespace
 
@@ -104,7 +104,7 @@ function createAndTestHPA() {
   local cluster_name="$1"
   local zone_name="$2"
   local project_name="$3"
-  local namspace="$4"
+  local namespace="$4"
 
   infomessage "Test horizontal Pod Scaling in $cluster_name's $namespace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
@@ -113,7 +113,7 @@ function createAndTestHPA() {
 
   for run in {1..150}
   do
-    curl -s $external_ip
+    curl -w '%{http_code}' -o /dev/null -s $external_ip
   done
   sleep 5
   echo "Check HPA status"
