@@ -45,10 +45,10 @@ And also have service account json ready for you GCP Project!
 
 ### Usage
 
-    ./gcpTest.sh {path_to_service_account_json} {cluster_name}
+    ./gcpTest.sh {path_to_service_account_json} {cluster_name} {project_name}
 
     For eg,
-    ./gcpTest.sh /Users/shashank.koppar/Downloads/sinatra-test.json "sample-cluster-name"
+    ./gcpTest.sh /Users/shashank.koppar/Downloads/sinatra-test.json "sample-cluster-name" "project_name"
 
 ## Notes
 
