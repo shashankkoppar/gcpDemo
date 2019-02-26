@@ -259,7 +259,7 @@ buildDockerImage "gcr.io/sinatra/test"
 rm -rf ruby-sinatra-example-app
 
 #-------------------------------------------------------------------------------
-# Set up kubectl and deploy application to access the cluster and Deploy ingress
+# Set up kubectl to access the cluster and deploy application  and Deploy ingress
 #-------------------------------------------------------------------------------
 deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "default"
 #deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
