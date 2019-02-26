@@ -53,7 +53,7 @@ And also have service account json ready for you GCP Project!
 https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine&_ga=2.238176192.-136528310.1549415913
 ```
 
-Usage of Command is as follows
+### Usage 
 
 ```
 ./gcpTest.sh {path_to_service_account_json}
