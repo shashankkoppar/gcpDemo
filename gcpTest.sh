@@ -41,7 +41,7 @@ function deployAppAndCreateIngress() {
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
   kubectl get pods -n $namespace
 
-cat <<-EOF >>deployment.yaml
+  cat <<-EOF >>deployment.yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
