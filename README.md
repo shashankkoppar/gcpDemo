@@ -6,9 +6,10 @@ GCP sample application deployment, accessing it via ingress and performing a clu
 This script does following things in order:
 
 ```
-Create two GCP clusters.
+Create two namespaces in GCP cluster.
+Create networkpolicy to acheive name isolation!
 Git clone ruby-sinatra sample application and create Docker image.
-Deploy the application to both clusters and expose it using ingress.
+Deploy the application to both namespaces and expose it using ingress.
 Perform a small load test and check horizontal pod scaling in action for both deployments.
 Create a new node pool to upgrade cluster.
 Cordon and drain the old nodes.
@@ -53,13 +54,13 @@ And also have service account json ready for you GCP Project!
 https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine&_ga=2.238176192.-136528310.1549415913
 ```
 
-### Usage 
+### Usage
 
 ```
-./gcpTest.sh {path_to_service_account_json}
+./gcpTest.sh {path_to_service_account_json} {cluster_name}
 
 For eg,
-./gcpTest.sh /Users/shashank.koppar/Downloads/sinatra-test.json
+./gcpTest.sh /Users/shashank.koppar/Downloads/sinatra-test.json "sample-cluster-name"
 ```
 
 ## Notes

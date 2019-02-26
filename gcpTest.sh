@@ -3,10 +3,12 @@
 #Prerequisites
 #gcloud sdk, git, jq
 SERVICE_ACCOUNT_KEY_PATH="$1"
+CLUSTER_NAME="$2"
+PROJECT_NAME="$3"
 
-if [[ -z "$1" ]]; then
-
-  echo "Please pass service account key path!"
+if [[ -z $SERVICE_ACCOUNT_KEY_PATH ]] || [[ -z $CLUSTER_NAME ]] || [[ -z $PROJECT_NAME ]]
+then
+  echo "Please pass service account key path,project name and cluster name! Compute zone is hardcoded as us-central1-b for demo purpose!"
   exit 1
 fi
 
@@ -20,10 +22,11 @@ function infomessage() {
 }
 
 function getExternalIP() {
-  until kubectl get ing  basic-ingress  -o json | jq '.status.loadBalancer.ingress[].ip'
+  local namespace="$1"
+  until kubectl get ing  basic-ingress -n $namespace -o json | jq '.status.loadBalancer.ingress[].ip'
   do
     sleep 40
-    echo "Waiting for external ip for ingress to be assigned"
+    echo "Waiting for external ip for ingress to be assigned!"
   done
 }
 
@@ -32,12 +35,13 @@ function deployAppAndCreateIngress() {
   local cluster_name="$1"
   local zone_name="$2"
   local project_name="$3"
+  local namespace="$4"
 
-  infomessage "Deploy application and create ingress in $cluster_name!"
+  infomessage "Deploy application and create ingress in $cluster_name's $namspace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
-  kubectl get pods
-  kubectl run --image=gcr.io/sinatra/test --port=4567 --limits=cpu=10m,memory=12Mi sinatra
-  kubectl expose deployment sinatra --target-port=4567 --type=NodePort
+  kubectl get pods -n $namespace
+  kubectl run --image=gcr.io/sinatra/test --port=4567 --limits=cpu=50m,memory=50Mi sinatra -n $namespace
+  kubectl expose deployment sinatra --target-port=4567 --type=NodePort -n $namespace
 
   cat <<-EOF >>ingress.yaml
   apiVersion: extensions/v1beta1
@@ -50,8 +54,9 @@ function deployAppAndCreateIngress() {
       servicePort: 4567
 EOF
 
-  kubectl create -f ingress.yaml
-  endpoint=`echo $(getExternalIP) | tr -d '"'`
+  kubectl create -f ingress.yaml -n $namespace
+  rm ingress.yaml
+  endpoint=`echo $(getExternalIP "$namespace") | tr -d '"'`
   while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' $endpoint)" != "200" ]]; do
     sleep 40
     echo "Waiting for external IP to be ready!"
@@ -64,11 +69,12 @@ function createAndTestHPA() {
   local cluster_name="$1"
   local zone_name="$2"
   local project_name="$3"
+  local namspace="$4"
 
-  infomessage "Test horizontal Pod Scaling in $cluster_name!"
+  infomessage "Test horizontal Pod Scaling in $cluster_name's $namespace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
-  kubectl autoscale deployment sinatra --min=1 --max=5 --cpu-percent=8
-  external_ip=$(getExternalIP)
+  kubectl autoscale deployment sinatra --min=1 --max=5 --cpu-percent=8 -n $namespace
+  external_ip=$(getExternalIP "$namespace")
 
   for run in {1..150}
   do
@@ -76,8 +82,8 @@ function createAndTestHPA() {
   done
   sleep 5
   echo "Check HPA status"
-  kubectl get hpa
-  kubectl get pods
+  kubectl get hpa -n $namespace
+  kubectl get pods -n $namspace
 }
 
 function createCluster() {
@@ -113,9 +119,14 @@ function upgradeCluster() {
   infomessage "Delete the old node pool in $cluster_name!"
   echo y | gcloud container node-pools delete default-pool
 
-  endpoint=`echo $(getExternalIP) | tr -d '"'`
   echo "Check ingress endpoint if working properly in $cluster_name after cluster upgrade!"
-  curl -I $endpoint
+  echo "Check staging ingress!"
+  endpoint1=`echo $(getExternalIP "staging") | tr -d '"'`
+  curl -I $endpoint1
+
+  echo "Check production ingress!"
+  endpoint2=`echo $(getExternalIP "production") | tr -d '"'`
+  curl -I $endpoint2
 
 }
 
@@ -134,6 +145,40 @@ function deleteCluster() {
   echo y | gcloud container clusters delete $cluster_name --zone $zone_name
 }
 
+function createNamespaces() {
+  local cluster_name="$1"
+  infomessage "Creating Namspaces!"
+  gcloud container clusters get-credentials $cluster_name
+  kubectl create namespace staging
+  kubectl create namespace production
+  kubectl label namespace staging environment=staging
+  kubectl label namespace production environment=production
+}
+
+function createNetworkPolicy() {
+
+  local namespace="$1"
+  infomessage "Creating NetworkPolicy for $namespace!"
+  cat <<-EOF >>networkpolicy.yaml
+  kind: NetworkPolicy
+  apiVersion: networking.k8s.io/v1
+  metadata:
+    name: allow-traffic
+  spec:
+    podSelector:
+      matchLabels:
+        run: sinatra
+    ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            environment: $namespace
+EOF
+
+  kubectl create -f networkpolicy.yaml -n $namespace
+  rm networkpolicy.yaml
+}
+
 #-------------------------------------------------------------------------------
 # initialize
 #-------------------------------------------------------------------------------
@@ -143,10 +188,16 @@ gcloud config set project sinatra
 gcloud config set compute/zone us-central1-b
 
 #-------------------------------------------------------------------------------
-# Set up two gcp clusters
+#  gcp cluster
 #-------------------------------------------------------------------------------
-createCluster "sinatra-test-1" "us-central1-b"
-createCluster "sinatra-test-2" "us-central1-b"
+createCluster "$CLUSTER_NAME" "us-central1-b"
+
+#-------------------------------------------------------------------------------
+#  Create namespaces
+#-------------------------------------------------------------------------------
+createNamespaces "$CLUSTER_NAME"
+createNetworkPolicy "staging"
+createNetworkPolicy "production"
 
 #-------------------------------------------------------------------------------
 # git clone sinatra project and change current working directory
@@ -173,26 +224,25 @@ EOF
 infomessage "Building docker image for sinatra using Kaniko"
 buildDockerImage "gcr.io/sinatra/test"
 rm -rf ruby-sinatra-example-app
+
 #-------------------------------------------------------------------------------
 # Set up kubectl and deploy application to access the cluster and Deploy ingress
 #-------------------------------------------------------------------------------
-deployAppAndCreateIngress "sinatra-test-1" "us-central1-b" "sinatra"
-deployAppAndCreateIngress "sinatra-test-2" "us-central1-b" "sinatra"
+deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "staging"
+deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
 
 #-------------------------------------------------------------------------------
 # Test HPA
 #-------------------------------------------------------------------------------
-createAndTestHPA "sinatra-test-1" "us-central1-b" "sinatra"
-createAndTestHPA "sinatra-test-2" "us-central1-b" "sinatra"
+createAndTestHPA "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "staging"
+createAndTestHPA "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
 
 #-------------------------------------------------------------------------------
 # upgradeCluster
 #-------------------------------------------------------------------------------
-upgradeCluster "sinatra-test-1" "us-central1-b"
-upgradeCluster "sinatra-test-2" "us-central1-b"
+upgradeCluster "$CLUSTER_NAME" "us-central1-b"
 
 #-------------------------------------------------------------------------------
 # Clean up
 #-------------------------------------------------------------------------------
-deleteCluster "sinatra-test-1" "us-central1-b"
-deleteCluster "sinatra-test-2" "us-central1-b"
+deleteCluster "$CLUSTER_NAME" "us-central1-b"
