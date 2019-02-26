@@ -1,0 +1,234 @@
+~/others/gcpDemo(master) » ./gcpTest.sh /Users/shashank.koppar/Downloads/sinatra-c8712ef1ed98.json "sinatra-gcp" "sinatra"
+=========================================================
+[INFO] initialize prject and set compute zone
+=========================================================
+Activated service account credentials for: [345506228458-compute@developer.gserviceaccount.com]
+Updated property [core/project].
+Updated property [compute/zone].
+=========================================================
+[INFO] Creating sinatra-gcp in us-central1-b zone!
+=========================================================
+WARNING: Starting in 1.12, new clusters will have basic authentication disabled by default. Basic authentication can be enabled (or disabled) manually using the `--[no-]enable-basic-auth` flag.
+WARNING: Starting in 1.12, new clusters will not have a client certificate issued. You can manually enable (or disable) the issuance of the client certificate using the `--[no-]issue-client-certificate` flag.
+WARNING: Currently VPC-native is not the default mode during cluster creation. In the future, this will become the default mode and can be disabled using `--no-enable-ip-alias` flag. Use `--[no-]enable-ip-alias` flag to suppress this warning.
+WARNING: Starting in 1.12, default node pools in new clusters will have their legacy Compute Engine instance metadata endpoints disabled by default. To create a cluster with legacy instance metadata endpoints disabled in the default node pool, run `clusters create` with the flag `--metadata disable-legacy-endpoints=true`.
+This will enable the autorepair feature for nodes. Please see https://cloud.google.com/kubernetes-engine/docs/node-auto-repair for more information on node autorepairs.
+WARNING: Starting in Kubernetes v1.10, new clusters will no longer get compute-rw and storage-ro scopes added to what is specified in --scopes (though the latter will remain included in the default --scopes). To use these scopes, add them explicitly to --scopes. To use the new behavior, set container/new_scopes_behavior property (gcloud config set container/new_scopes_behavior true).
+Creating cluster sinatra-gcp in us-central1-b... Cluster is being co
+nfigured...⠼
+Creating cluster sinatra-gcp in us-central1-b... Cluster is being de
+ployed...⠧
+Creating cluster sinatra-gcp in us-central1-b... Cluster is being he
+alth-checked (master is healthy)...done.
+Created [https://container.googleapis.com/v1/projects/sinatra/zones/us-central1-b/clusters/sinatra-gcp].
+To inspect the contents of your cluster, go to: https://console.cloud.google.com/kubernetes/workload_/gcloud/us-central1-b/sinatra-gcp?project=sinatra
+kubeconfig entry generated for sinatra-gcp.
+NAME         LOCATION       MASTER_VERSION  MASTER_IP      MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
+sinatra-gcp  us-central1-b  1.11.7-gke.4    35.226.171.55  n1-standard-1  1.11.7-gke.4  2          RUNNING
+=========================================================
+[INFO] Creating Namspaces!
+=========================================================
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for sinatra-gcp.
+namespace "staging" created
+namespace "production" created
+namespace "staging" labeled
+namespace "production" labeled
+=========================================================
+[INFO] Creating NetworkPolicy for staging!
+=========================================================
+networkpolicy.networking.k8s.io "deny-from-other-namespaces" created
+=========================================================
+[INFO] Creating NetworkPolicy for production!
+=========================================================
+networkpolicy.networking.k8s.io "deny-from-other-namespaces" created
+=========================================================
+[INFO] Getting sinatra application and creating Dockerfile
+=========================================================
+Cloning into 'ruby-sinatra-example-app'...
+remote: Enumerating objects: 65, done.
+remote: Total 65 (delta 0), reused 0 (delta 0), pack-reused 65
+Receiving objects: 100% (65/65), 7.44 KiB | 3.72 MiB/s, done.
+Resolving deltas: 100% (27/27), done.
+=========================================================
+[INFO] Building docker image for sinatra using Kaniko
+=========================================================
+Updated property [builds/use_kaniko].
+Creating temporary tarball archive of 9 file(s) totalling 3.0 KiB before compression.
+Some files were not included in the source upload.
+
+Check the gcloud log [/Users/shashank.koppar/.config/gcloud/logs/2019.02.27/07.37.29.012550.log] to see which files and the contents of the
+default gcloudignore file used (see `$ gcloud topic gcloudignore` to learn
+more).
+
+Uploading tarball of [.] to [gs://sinatra_cloudbuild/source/1551220649.15-30a4a655c94146abbe93b386a500198e.tgz]
+Created [https://cloudbuild.googleapis.com/v1/projects/sinatra/builds/0586b176-54b5-4c4a-8d16-63cb76b3c982].
+Logs are available at [https://console.cloud.google.com/gcr/builds/0586b176-54b5-4c4a-8d16-63cb76b3c982?project=345506228458].
+------------------------ REMOTE BUILD OUTPUT ------------------------
+starting build "0586b176-54b5-4c4a-8d16-63cb76b3c982"
+
+FETCHSOURCE
+Fetching storage object: gs://sinatra_cloudbuild/source/1551220649.15-30a4a655c94146abbe93b386a500198e.tgz#1551220650306843
+Copying gs://sinatra_cloudbuild/source/1551220649.15-30a4a655c94146abbe93b386a500198e.tgz#1551220650306843...
+/ [0 files][    0.0 B/  1.9 KiB]                                     / [1 files][  1.9 KiB/  1.9 KiB]
+Operation completed over 1 objects/1.9 KiB.
+BUILD
+Pulling image: gcr.io/kaniko-project/executor:latest
+latest: Pulling from kaniko-project/executor
+Digest: sha256:d9fe474f80b73808dc12b54f45f5fc90f7856d9fc699d4a5e79d968a1aef1a72
+Status: Downloaded newer image for gcr.io/kaniko-project/executor:latest
+INFO[0000] Downloading base image ruby:2.6.1-alpine3.9
+2019/02/26 22:37:50 No matching credentials were found, falling back on anonymous
+INFO[0000] Error while retrieving image from cache: geting file info: stat /cache/sha256:d159edea0ced274b62b0f3e82eee39a2b8207f164c7d6aa0306e59ac9d7e50fd: no such file or directory
+INFO[0000] Downloading base image ruby:2.6.1-alpine3.9
+2019/02/26 22:37:50 No matching credentials were found, falling back on anonymous
+INFO[0000] Using files from context: [/workspace]
+INFO[0000] Checking for cached layer gcr.io/sinatra/test/cache:dc887c1eb1bd0201a5b6ddd41de7b2f9ff946b1e684ba74152973526a22823df...
+INFO[0001] Using caching version of cmd: RUN rm Gemfile.lock &&    bundle install
+INFO[0001] Taking snapshot of full filesystem...
+INFO[0001] Skipping paths under /kaniko, as it is a whitelisted directory
+INFO[0001] Skipping paths under /root/tokencache, as it is a whitelisted directory
+INFO[0001] Skipping paths under /builder/cache, as it is a whitelisted directory
+INFO[0001] Skipping paths under /builder/home, as it is a whitelisted directory
+INFO[0001] Skipping paths under /builder/outputs, as it is a whitelisted directory
+INFO[0001] Skipping paths under /var/run, as it is a whitelisted directory
+INFO[0001] Skipping paths under /dev, as it is a whitelisted directory
+INFO[0001] Skipping paths under /sys, as it is a whitelisted directory
+INFO[0001] Skipping paths under /proc, as it is a whitelisted directory
+INFO[0001] Skipping paths under /workspace, as it is a whitelisted directory
+INFO[0001] Using files from context: [/workspace]
+INFO[0001] COPY . .
+INFO[0001] Taking snapshot of files...
+INFO[0001] RUN rm Gemfile.lock &&    bundle install
+INFO[0001] Found cached layer, extracting to filesystem
+INFO[0002] Taking snapshot of files...
+INFO[0003] ENTRYPOINT ["bundle" ,"exec","ruby","app.rb", "-o","0.0.0.0"]
+INFO[0003] No files changed in this command, skipping snapshotting.
+2019/02/26 22:37:53 existing blob: sha256:9a13ad0cfe1db7ba5b1bbd3cb95d113cf3ef2a05e769cd2b95a127b61e589cb7
+2019/02/26 22:37:53 existing blob: sha256:4e0e4ac8c0250811c2a077ee34667c399a7a4a8d8496b2d3d91d97c561057d93
+2019/02/26 22:37:53 existing blob: sha256:6c40cc604d8e4c121adcb6b0bfe8bb038815c350980090e74aa5a6423f8f82c0
+2019/02/26 22:37:54 existing blob: sha256:16f42435de2836a3f15950d670a523ea2a63dac6c5aaf755794e27ddd1c1158a
+2019/02/26 22:37:55 pushed blob sha256:45b116a06cae62c88e2a90fdcc08997133040fb32118158b0c8a8bd2531c1465
+2019/02/26 22:37:55 pushed blob sha256:69538846a94bd01481c45c23f3717bbb563b2e3b3000e9bb90c584c43983be2a
+2019/02/26 22:37:58 pushed blob sha256:7c2744d6abd3132bc472ae59267b385dafd468561795eb36f22c9f531118a4c2
+2019/02/26 22:37:58 gcr.io/sinatra/test:latest: digest: sha256:49afc45e3c08d0193d0f9b5908a7bad8e10fbead56962286c84a589c3cd41fba size: 1239
+PUSH
+DONE
+---------------------------------------------------------------------
+
+ID                                    CREATE_TIME                DURATION  SOURCE                                                                             IMAGES  STATUS
+0586b176-54b5-4c4a-8d16-63cb76b3c982  2019-02-26T22:37:31+00:00  28S       gs://sinatra_cloudbuild/source/1551220649.15-30a4a655c94146abbe93b386a500198e.tgz  -       SUCCESS
+=========================================================
+[INFO] Deploy application and create ingress in sinatra-gcp's default!
+=========================================================
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for sinatra-gcp.
+No resources found.
+deployment.extensions "sinatra" created
+service "sinatra" exposed
+ingress.extensions "basic-ingress" created
+jq: error (at <stdin>:22): Cannot iterate over null (null)
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Waiting for external IP to be ready!
+Application is deployed and can be accessed from Ingress!
+=========================================================
+[INFO] Test horizontal Pod Scaling in sinatra-gcp's default!
+=========================================================
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for sinatra-gcp.
+deployment.apps "sinatra" autoscaled
+200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200
+200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200
+200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200200Check HPA status
+NAME      REFERENCE            TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+sinatra   Deployment/sinatra   0%/8%     1         5         1          43s
+NAME                      READY     STATUS    RESTARTS   AGE
+sinatra-7566bc957-88m9n   1/1       Running   0          16m
+=========================================================
+[INFO] Updating kubernetes node pool in sinatra-gcp!
+=========================================================
+WARNING: Starting in 1.12, new node pools will be created with their legacy Compute Engine instance metadata APIs disabled by default. To create a node pool with legacy instance metadata endpoints disabled, run `node-pools create` with the flag `--metadata disable-legacy-endpoints=true`.
+This will enable the autorepair feature for nodes. Please see https://cloud.google.com/kubernetes-engine/docs/node-auto-repair for more information on node autorepairs.
+WARNING: Starting in Kubernetes v1.10, new clusters will no longer get compute-rw and storage-ro scopes added to what is specified in --scopes (though the latter will remain included in the default --scopes). To use these scopes, add them explicitly to --scopes. To use the new behavior, set container/new_scopes_behavior property (gcloud config set container/new_scopes_behavior true).
+Creating node pool pool-sinatra-gcp...done.
+Created [https://container.googleapis.com/v1/projects/sinatra/zones/us-central1-b/clusters/sinatra-gcp/nodePools/pool-sinatra-gcp].
+NAME              MACHINE_TYPE   DISK_SIZE_GB  NODE_VERSION
+pool-sinatra-gcp  n1-standard-1  100           1.11.7-gke.4
+Updated property [container/cluster].
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for sinatra-gcp.
+=========================================================
+[INFO] Cordon the old nodes in sinatra-gcp!
+=========================================================
+node "gke-sinatra-gcp-default-pool-9123b4cd-blfc" cordoned
+node "gke-sinatra-gcp-default-pool-9123b4cd-bn1t" cordoned
+=========================================================
+[INFO] Drain the old nodes in sinatra-gcp!
+=========================================================
+node "gke-sinatra-gcp-default-pool-9123b4cd-blfc" already cordoned
+WARNING: Ignoring DaemonSet-managed pods: calico-node-kltr4, fluentd-gcp-v3.2.0-9xrvv, ip-masq-agent-vj2cg
+pod "calico-typha-horizontal-autoscaler-5ff7f558cc-8mvnx" evicted
+pod "sinatra-7566bc957-88m9n" evicted
+pod "sinatra-7566bc957-qvzn6" evicted
+pod "calico-typha-vertical-autoscaler-5d4bf57df5-x4sbj" evicted
+pod "calico-node-vertical-autoscaler-547d98499d-rxgvr" evicted
+pod "l7-default-backend-7ff48cffd7-ljv4g" evicted
+pod "kube-dns-autoscaler-67c97c87fb-8bjxm" evicted
+pod "event-exporter-v0.2.3-85644fcdf-mggpg" evicted
+pod "kube-dns-548976df6c-hpvbc" evicted
+pod "fluentd-gcp-scaler-8b674f786-4ms6s" evicted
+node "gke-sinatra-gcp-default-pool-9123b4cd-blfc" drained
+node "gke-sinatra-gcp-default-pool-9123b4cd-bn1t" already cordoned
+WARNING: Ignoring DaemonSet-managed pods: fluentd-gcp-v3.2.0-g9k42, ip-masq-agent-72kwv
+pod "calico-typha-5b857668fd-6t8k4" evicted
+pod "metrics-server-v0.2.1-fd596d746-x5wr6" evicted
+pod "heapster-v1.6.0-beta.1-9888f4d7d-vjkqn" evicted
+pod "kube-dns-548976df6c-ltfhs" evicted
+node "gke-sinatra-gcp-default-pool-9123b4cd-bn1t" drained
+=========================================================
+[INFO] Delete the old node pool in sinatra-gcp!
+=========================================================
+The following node pool will be deleted.
+[default-pool] in cluster [sinatra-gcp] in [us-central1-b]
+
+Do you want to continue (Y/n)?
+Deleting node pool default-pool...
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................done.
+Deleted [https://container.googleapis.com/v1/projects/sinatra/zones/us-central1-b/clusters/sinatra-gcp/nodePools/default-pool].
+Check ingress endpoint if working properly in sinatra-gcp after cluster upgrade!
+>>>>NOTE: This part is expected, since i made deployment , svc,ingress to only default ! <<<<<
+Check staging ingress!
+Error from server (NotFound): ingresses.extensions "basic-ingress" not found
+curl: no URL specified!
+curl: try 'curl --help' or 'curl --manual' for more information
+Check production ingress!
+Error from server (NotFound): ingresses.extensions "basic-ingress" not found
+curl: no URL specified!
+curl: try 'curl --help' or 'curl --manual' for more information
+>>>> <<<<<
+=========================================================
+[INFO] Deleting sinatra-gcp in us-central1-b zone!
+=========================================================
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+The following clusters will be deleted.
+ - [sinatra-gcp] in [us-central1-b]
+
+Do you want to continue (Y/n)?
+Deleting cluster sinatra-gcp...
+................................................................................................................................................................................................
+..........................................................done.
+Deleted [https://container.googleapis.com/v1/projects/sinatra/zones/us-central1-b/clusters/sinatra-gcp].

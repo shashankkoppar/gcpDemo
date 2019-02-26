@@ -54,3 +54,4 @@ And also have service account json ready for you GCP Project!
     Compute zone is hardcoded as us-central1-b!
     Also external ip takes some time to come into effect. So hang on tight till it gets ready!
     Not using static ip for ingress since I just have an free version
+    Sample console output in sampe-ouptu-snippet.
