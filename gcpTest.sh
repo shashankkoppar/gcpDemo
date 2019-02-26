@@ -66,18 +66,12 @@ spec:
         image: gcr.io/sinatra/test
         ports:
         - containerPort: 4567
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 4567
-          initialDelaySeconds: 20
-          timeoutSeconds: 3
         readinessProbe:
           httpGet:
             path: /
             port: 4567
           initialDelaySeconds: 20
-          timeoutSeconds: 3
+          timeoutSeconds: 5
 EOF
 
   kubectl create -f deployment.yaml -n $namespace
@@ -204,16 +198,14 @@ function createNetworkPolicy() {
   kind: NetworkPolicy
   apiVersion: networking.k8s.io/v1
   metadata:
-    name: allow-traffic
+    namespace: $namespace
+    name: deny-from-other-namespaces
   spec:
     podSelector:
       matchLabels:
-        run: sinatra
     ingress:
     - from:
-      - namespaceSelector:
-          matchLabels:
-            environment: $namespace
+      - podSelector: {}
 EOF
 
   kubectl create -f networkpolicy.yaml -n $namespace
