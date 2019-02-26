@@ -109,7 +109,7 @@ function createAndTestHPA() {
   infomessage "Test horizontal Pod Scaling in $cluster_name's $namespace!"
   gcloud container clusters get-credentials $cluster_name --zone $zone_name --project $project_name
   kubectl autoscale deployment sinatra --min=1 --max=5 --cpu-percent=8 -n $namespace
-  external_ip=$(getExternalIP "$namespace")
+  external_ip=`echo $(getExternalIP "$namespace") | tr -d '"'`
 
   for run in {1..150}
   do
@@ -118,7 +118,7 @@ function createAndTestHPA() {
   sleep 5
   echo "Check HPA status"
   kubectl get hpa -n $namespace
-  kubectl get pods -n $namspace
+  kubectl get pods -n $namespace
 }
 
 function createCluster() {
@@ -261,14 +261,14 @@ rm -rf ruby-sinatra-example-app
 #-------------------------------------------------------------------------------
 # Set up kubectl and deploy application to access the cluster and Deploy ingress
 #-------------------------------------------------------------------------------
-deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "staging"
-deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
+deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "default"
+#deployAppAndCreateIngress "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
 
 #-------------------------------------------------------------------------------
 # Test HPA
 #-------------------------------------------------------------------------------
-createAndTestHPA "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "staging"
-createAndTestHPA "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
+createAndTestHPA "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "default"
+#createAndTestHPA "$CLUSTER_NAME" "us-central1-b" "$PROJECT_NAME" "production"
 
 #-------------------------------------------------------------------------------
 # upgradeCluster
